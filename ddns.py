@@ -3,7 +3,11 @@ import os
 import json
 import signal
 import functools
+import logging
 from urllib import request, error, parse
+
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
 def read_config_to_env():
@@ -12,11 +16,13 @@ def read_config_to_env():
         try:
             f = open(config_path)
             for item in f:
+                if '\n' == item:
+                    continue
                 item = item.split('=')
                 os.environ[item[0]] = item[1].split()[0]
             f.close()
         except IndexError:
-            print('config error')
+            logging.error('config error')
             exit()
         if not os.getenv('RECORD_ID'):
             record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
@@ -28,7 +34,7 @@ def check_config():
     domain = os.getenv('DOMAIN')
     sub_domain = os.getenv('SUB_DOMAIN')
     if not (login_token and domain and sub_domain):
-        print('config error')
+        logging.error('config error')
         exit()
 
 
@@ -78,7 +84,7 @@ def update_record():
     req = request.Request(url=url, data=params.encode('utf-8'), method='POST', headers=header())
     resp = request.urlopen(req).read().decode()
     records = json.loads(resp)
-    print(records)
+    logging.info(records)
 
 
 async def main():
@@ -95,12 +101,13 @@ async def main():
 
 
 def ask_exit(_sig_name):
-    print("got signal %s: exit" % _sig_name)
+    print('\n')
+    logging.warning('got signal {}: exit'.format(_sig_name))
     loop.stop()
 
 
 if __name__ == '__main__':
-    print('start...')
+    logging.info('start...')
     read_config_to_env()
     check_config()
     loop = asyncio.get_event_loop()
@@ -110,6 +117,6 @@ if __name__ == '__main__':
     try:
         loop.run_until_complete(main())
     except (KeyboardInterrupt, RuntimeError):
-        print('stop...')
+        logging.info('stop...')
     finally:
         loop.close()
