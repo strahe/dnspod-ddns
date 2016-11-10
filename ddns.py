@@ -84,10 +84,14 @@ def update_record():
 async def main():
     while 1:
         current_ip = get_ip()
-        if not (current_ip and current_ip == os.getenv('CURRENT_IP')):
+        if current_ip and current_ip != os.getenv('CURRENT_IP'):
             os.environ['CURRENT_IP'] = current_ip
             update_record()
-        await asyncio.sleep(os.getenv('INTERVAL', 5))
+        try:
+            interval = int(os.getenv('INTERVAL', 5))
+        except ValueError:
+            interval = 5
+        await asyncio.sleep(interval)
 
 
 def ask_exit(_sig_name):
