@@ -4,6 +4,7 @@ import json
 import signal
 import functools
 import logging
+import socket
 from urllib import request, error, parse
 
 
@@ -26,6 +27,8 @@ def read_config_to_env():
             exit()
         if not os.getenv('RECORD_ID'):
             record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
+            if not record_id:
+                record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
             os.environ['RECORD_ID'] = record_id
 
 
@@ -53,7 +56,10 @@ def get_record_id(domain, sub_domain):
         'domain': domain
     })
     req = request.Request(url=url, data=params.encode('utf-8'), method='POST', headers=header())
-    resp = request.urlopen(req).read().decode()
+    try:
+        resp = request.urlopen(req).read().decode()
+    except (error.HTTPError, error.URLError, socket.timeout):
+        return None
     records = json.loads(resp).get('records', {})
     for item in records:
         if item.get('name') == sub_domain:
@@ -64,8 +70,8 @@ def get_record_id(domain, sub_domain):
 def get_ip():
     url = 'http://www.httpbin.org/ip'
     try:
-        resp = request.urlopen(url=url, timeout=5).read()
-    except (error.HTTPError, error.URLError):
+        resp = request.urlopen(url=url, timeout=10).read()
+    except (error.HTTPError, error.URLError, socket.timeout):
         return None
     json_data = json.loads(resp.decode("utf-8"))
     return json_data.get('origin')
