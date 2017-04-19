@@ -25,11 +25,9 @@ def read_config_to_env():
         except IndexError:
             logging.error('config error')
             exit()
-        if not os.getenv('RECORD_ID'):
-            record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
-            if not record_id:
-                record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
-            os.environ['RECORD_ID'] = record_id
+    if not os.getenv('RECORD_ID'):
+        record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
+        os.environ['RECORD_ID'] = record_id
 
 
 def check_config():
