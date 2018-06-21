@@ -10,7 +10,7 @@
 
 配置文件路径： `/etc/dnspod/ddnsrc` (也可通过环境变量设置)
 
-在 Windows 下，配置文件路径为：`ddnspod.cfg`
+在 Windows 下，配置文件路径为本目录下的：`ddnspod.cfg`
 
 可配置的有效参数如下:
 ```
