@@ -10,9 +10,14 @@ from urllib import request, error, parse
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-
 def read_config_to_env():
+    
     config_path = '/etc/dnspod/ddnsrc'
+    
+    # windows
+    if os.name == 'nt':
+        config_path = 'ddnspod.cfg'
+    
     if os.path.isfile(config_path):
         try:
             f = open(config_path)
@@ -20,12 +25,14 @@ def read_config_to_env():
                 if '\n' == item:
                     continue
                 item = item.split('=')
+                
                 os.environ[item[0]] = item[1].split()[0]
             f.close()
         except IndexError:
             logging.error('config error')
             exit()
     if not os.getenv('RECORD_ID'):
+        print(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
         record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
         os.environ['RECORD_ID'] = record_id
 
@@ -116,8 +123,10 @@ if __name__ == '__main__':
     check_config()
     loop = asyncio.get_event_loop()
     for sig_name in ('SIGINT', 'SIGTERM'):
-        loop.add_signal_handler(getattr(signal, sig_name),
-                                functools.partial(ask_exit, sig_name))
+        try:
+            loop.add_signal_handler(getattr(signal, sig_name), functools.partial(ask_exit, sig_name))
+        except NotImplementedError:
+            pass  # Ignore if not implemented. Means this program is running in windows.
     try:
         loop.run_until_complete(main())
     except (KeyboardInterrupt, RuntimeError):
