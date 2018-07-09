@@ -7,13 +7,12 @@ import logging
 import socket
 from urllib import request, error, parse
 
-
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-def read_config_to_env():
-    
+def read_config_to_env():    
+    # linux
     config_path = '/etc/dnspod/ddnsrc'
-    
+
     # windows
     if os.name == 'nt':
         config_path = 'ddnspod.cfg'
@@ -32,8 +31,9 @@ def read_config_to_env():
             logging.error('config error')
             exit()
     if not os.getenv('RECORD_ID'):
-        print(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
+        print("DDNS: %s.%s" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN')))
         record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
+        assert None != record_id, "未找到记录id，请检查DNSPOD设置里有没有设置 %s.%s 的 A 记录" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN'))
         os.environ['RECORD_ID'] = record_id
 
 
@@ -44,6 +44,16 @@ def check_config():
     if not (login_token and domain and sub_domain):
         logging.error('config error')
         exit()
+
+
+def get_ip():
+    url = 'http://www.httpbin.org/ip'
+    try:
+        resp = request.urlopen(url=url, timeout=10).read()
+    except (error.HTTPError, error.URLError, socket.timeout):
+        return None
+    json_data = json.loads(resp.decode("utf-8"))
+    return json_data.get('origin')
 
 
 def header():
@@ -70,16 +80,6 @@ def get_record_id(domain, sub_domain):
         if item.get('name') == sub_domain:
             return item.get('id')
     return None
-
-
-def get_ip():
-    url = 'http://www.httpbin.org/ip'
-    try:
-        resp = request.urlopen(url=url, timeout=10).read()
-    except (error.HTTPError, error.URLError, socket.timeout):
-        return None
-    json_data = json.loads(resp.decode("utf-8"))
-    return json_data.get('origin')
 
 
 def update_record():
