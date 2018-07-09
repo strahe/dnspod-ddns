@@ -1,2 +1,2 @@
-py ddns.py > ddnspod.log
+py ddns.py>ddnspod.log
 pause
