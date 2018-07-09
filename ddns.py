@@ -31,7 +31,7 @@ def read_config_to_env():
             logging.error('config error')
             exit()
     if not os.getenv('RECORD_ID'):
-        print("DDNS: %s.%s" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN')))
+        logging.info("DDNS: %s.%s" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN')))
         record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
         assert None != record_id, "未找到记录id，请检查DNSPOD设置里有没有设置 %s.%s 的 A 记录" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN'))
         os.environ['RECORD_ID'] = record_id
@@ -58,6 +58,7 @@ def get_ip():
     return json_data.get('origin')
 
 # 这个函数可以在本地 DNS 遭受污染的时候获取到IP
+# 如需模拟DNS污染，可以在HOSTS文件里加入 127.0.0.1 www.httpbin.org
 def get_ip_2():
     url = 'http://52.5.182.176/ip'
     try:
@@ -119,6 +120,14 @@ async def main():
             logging.error('get current ip FAILED.')
 
         if current_ip and current_ip != os.getenv('CURRENT_IP'):
+            # TODO：
+            # 对于拥有多个出口 IP 的服务器，上面的 get_ip() 函数会在几个 ip 之间不停切换
+            # 然后频繁进入这个判断，进行 update_record()，然后很快就会触发 API Limited 了
+            # 也许可以找点办法查询一下所有各 ip 是否可用……
+            #
+            # 测试用的代码：
+            # logging.info('ip发生了更改(%s->%s)' %(os.getenv('CURRENT_IP'), current_ip))
+            # 
             os.environ['CURRENT_IP'] = current_ip
             update_record()
         try:
@@ -129,7 +138,6 @@ async def main():
 
 
 def ask_exit(_sig_name):
-    print('\n')
     logging.warning('got signal {}: exit'.format(_sig_name))
     loop.stop()
 
