@@ -35,6 +35,7 @@ def read_config_to_env():
         record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
         assert None != record_id, "未找到记录id，请检查DNSPOD设置里有没有设置 %s.%s 的 A 记录" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN'))
         os.environ['RECORD_ID'] = record_id
+    logging.info('config loaded')
 
 
 def check_config():
@@ -44,12 +45,24 @@ def check_config():
     if not (login_token and domain and sub_domain):
         logging.error('config error')
         exit()
+    logging.info('config checked')
 
-
+# 这个函数在本地 DNS 遭受污染时失效
 def get_ip():
     url = 'http://www.httpbin.org/ip'
     try:
         resp = request.urlopen(url=url, timeout=10).read()
+    except (error.HTTPError, error.URLError, socket.timeout):
+        return None
+    json_data = json.loads(resp.decode("utf-8"))
+    return json_data.get('origin')
+
+# 这个函数可以在本地 DNS 遭受污染的时候获取到IP
+def get_ip_2():
+    url = 'http://52.5.182.176/ip'
+    try:
+        req = request.Request(url=url, method='GET', headers={'Host': 'www.httpbin.org'})
+        resp = request.urlopen(req).read()
     except (error.HTTPError, error.URLError, socket.timeout):
         return None
     json_data = json.loads(resp.decode("utf-8"))
@@ -100,7 +113,11 @@ def update_record():
 
 async def main():
     while 1:
-        current_ip = get_ip()
+        current_ip = get_ip() or get_ip_2()
+        
+        if current_ip == None:
+            logging.error('get current ip FAILED.')
+
         if current_ip and current_ip != os.getenv('CURRENT_IP'):
             os.environ['CURRENT_IP'] = current_ip
             update_record()
