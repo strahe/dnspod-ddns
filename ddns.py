@@ -7,13 +7,12 @@ import logging
 import socket
 from urllib import request, error, parse
 
-
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-def read_config_to_env():
-    
+def read_config_to_env():    
+    # linux
     config_path = '/etc/dnspod/ddnsrc'
-    
+
     # windows
     if os.name == 'nt':
         config_path = 'ddnspod.cfg'
@@ -32,9 +31,11 @@ def read_config_to_env():
             logging.error('config error')
             exit()
     if not os.getenv('RECORD_ID'):
-        print(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
+        logging.info("DDNS: %s.%s" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN')))
         record_id = get_record_id(os.getenv('DOMAIN'), os.getenv('SUB_DOMAIN'))
+        assert None != record_id, "未找到记录id，请检查DNSPOD设置里有没有设置 %s.%s 的 A 记录" % (os.getenv('SUB_DOMAIN'), os.getenv('DOMAIN'))
         os.environ['RECORD_ID'] = record_id
+    logging.info('config loaded')
 
 
 def check_config():
@@ -44,6 +45,29 @@ def check_config():
     if not (login_token and domain and sub_domain):
         logging.error('config error')
         exit()
+    logging.info('config checked')
+
+# 这个函数在本地 DNS 遭受污染时失效
+def get_ip():
+    url = 'http://www.httpbin.org/ip'
+    try:
+        resp = request.urlopen(url=url, timeout=10).read()
+    except (error.HTTPError, error.URLError, socket.timeout):
+        return None
+    json_data = json.loads(resp.decode("utf-8"))
+    return json_data.get('origin')
+
+# 这个函数可以在本地 DNS 遭受污染的时候获取到IP
+# 如需模拟DNS污染，可以在HOSTS文件里加入 127.0.0.1 www.httpbin.org
+def get_ip_2():
+    url = 'http://52.5.182.176/ip'
+    try:
+        req = request.Request(url=url, method='GET', headers={'Host': 'www.httpbin.org'})
+        resp = request.urlopen(req).read()
+    except (error.HTTPError, error.URLError, socket.timeout):
+        return None
+    json_data = json.loads(resp.decode("utf-8"))
+    return json_data.get('origin')
 
 
 def header():
@@ -72,16 +96,6 @@ def get_record_id(domain, sub_domain):
     return None
 
 
-def get_ip():
-    url = 'http://www.httpbin.org/ip'
-    try:
-        resp = request.urlopen(url=url, timeout=10).read()
-    except (error.HTTPError, error.URLError, socket.timeout):
-        return None
-    json_data = json.loads(resp.decode("utf-8"))
-    return json_data.get('origin')
-
-
 def update_record():
     url = 'https://dnsapi.cn/Record.Ddns'
     params = parse.urlencode({
@@ -100,8 +114,20 @@ def update_record():
 
 async def main():
     while 1:
-        current_ip = get_ip()
+        current_ip = get_ip() or get_ip_2()
+        
+        if current_ip == None:
+            logging.error('get current ip FAILED.')
+
         if current_ip and current_ip != os.getenv('CURRENT_IP'):
+            # TODO：
+            # 对于拥有多个出口 IP 的服务器，上面的 get_ip() 函数会在几个 ip 之间不停切换
+            # 然后频繁进入这个判断，进行 update_record()，然后很快就会触发 API Limited 了
+            # 也许可以找点办法查询一下所有各 ip 是否可用……
+            #
+            # 测试用的代码：
+            # logging.info('ip发生了更改(%s->%s)' %(os.getenv('CURRENT_IP'), current_ip))
+            # 
             os.environ['CURRENT_IP'] = current_ip
             update_record()
         try:
@@ -112,7 +138,6 @@ async def main():
 
 
 def ask_exit(_sig_name):
-    print('\n')
     logging.warning('got signal {}: exit'.format(_sig_name))
     loop.stop()
 
