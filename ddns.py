@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding:utf8 -*-
+# -*- coding: utf-8 -*-
 
 import asyncio
 import os
@@ -94,8 +94,9 @@ if __name__ == '__main__':
     logging.info('start...')
     read_config()
     check_config()
-
     cfg['record_id'] = get_record_id(cfg['domain'], cfg['sub_domain'])
+    logging.info("get record_id: %s" % str(cfg['record_id']))
+    logging.info("watching ip for ddns: %s.%s" % (cfg['sub_domain'], cfg['domain']))
 
     loop = asyncio.get_event_loop()
     for sig_name in ('SIGINT', 'SIGTERM'):
