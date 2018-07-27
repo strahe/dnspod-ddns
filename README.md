@@ -4,10 +4,6 @@
 
 程序运行在python 3.5以上.
 
-以下为测试通过的环境：
-- Windows 10
-- Windows Server 2016
-
 ## 开始使用
 
 ### 本地运行
@@ -65,3 +61,14 @@ docker run -d                       \
     -e "ip_count=1"                 \
     strahe/dnspod-ddns
 ```
+
+### 测试环境
+
+以下为测试通过的环境：
+- [x] Windows 10
+- [x] Windows Server 2016
+
+尚未测试，预期适配的环境：
+- [ ] Centos
+- [ ] Ubunto
+- [ ] Debian...
