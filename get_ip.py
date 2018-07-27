@@ -16,7 +16,8 @@ regex_ip = re.compile(
 def get_ip():
     return (get_ip_by_ipip()
         or  get_ip_by_httpbin()
-        or  get_ip_by_httpbin_direct_1() )
+        or  get_ip_by_httpbin_direct_1()
+        or  get_ip_by_httpbin_direct_2() )
     
 # 这几个函数会在 DNS 遭受污染时失效
 def get_ip_by_ipip():
@@ -24,7 +25,8 @@ def get_ip_by_ipip():
     try:
         resp = request.urlopen(url=url, timeout=10).read()
         return regex_ip.match(resp.decode("utf-8")).group(1)
-    except:
+    except Exception as e:
+        logging.warning("get_ip_by_ipip FAILED, error: %s", str(e))
         return None
 
 def get_ip_by_httpbin():
@@ -32,7 +34,8 @@ def get_ip_by_httpbin():
     try:
         resp = request.urlopen(url=url, timeout=10).read()
         return regex_ip.match(resp.decode("utf-8")).group(1)
-    except:
+    except Exception as e:
+        logging.warning("get_ip_by_httpbin FAILED, error: %s", str(e))
         return None
 
 # 这个函数可以在本地 DNS 遭受污染的时候获取到IP
@@ -43,7 +46,18 @@ def get_ip_by_httpbin_direct_1():
         req = request.Request(url=url, method='GET', headers={'Host': 'www.httpbin.org'})
         resp = request.urlopen(req).read()
         return regex_ip.match(resp.decode("utf-8")).group(1)
-    except:
+    except Exception as e:
+        logging.warning("get_ip_by_httpbin_direct_1 FAILED, error: %s", str(e))
+        return None
+
+def get_ip_by_httpbin_direct_2():
+    url = 'http://52.44.230.61/ip'
+    try:
+        req = request.Request(url=url, method='GET', headers={'Host': 'www.httpbin.org'})
+        resp = request.urlopen(req).read()
+        return regex_ip.match(resp.decode("utf-8")).group(1)
+    except Exception as e:
+        logging.warning("get_ip_by_httpbin_direct_2 FAILED, error: %s", str(e))
         return None
 
     
