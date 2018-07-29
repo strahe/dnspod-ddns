@@ -22,7 +22,7 @@ EMAIL=you@email.com
 IP_COUNT=1
 ```
 
-* LOGIN_TOKEN : 必填, 在dnspod上申请的api组成的token,参考：https://support.dnspod.cn/kb/showarticle/tsid/227/
+* LOGIN_TOKEN : 必填, 在dnspod上申请的api组成的token,参考：https://support.dnspod.cn/Kb/showarticle/tsid/227/
 * DOMAIN : 必填, 在dnspod解析的域名
 * SUB_DOMAIN : 必填, 使用ddns的子域名
 * INTERVAL: 选填, 轮询检查的时间间隔, 单位秒， 默认为5, 建议不要小于5
