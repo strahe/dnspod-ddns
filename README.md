@@ -67,8 +67,8 @@ docker run -d                       \
 以下为测试通过的环境：
 - [x] Windows 10
 - [x] Windows Server 2016
+- [x] Debian 4.9.8
 
-尚未测试，预期适配的环境：
+尚未测试，应该能适配的环境：
 - [ ] Centos
 - [ ] Ubunto
-- [ ] Debian...
