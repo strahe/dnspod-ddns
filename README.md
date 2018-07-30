@@ -1,4 +1,5 @@
-## dnspod-ddns
+
+# dnspod-ddns
 
 定时检查 ip 变化并更新dnspod的解析记录.
 
@@ -13,7 +14,8 @@
 在 Windows 下，配置文件路径为本目录下的：`ddnspod.cfg`
 
 可配置的有效参数如下:
-```
+
+```config
 LOGIN_TOKEN=token_id,token
 DOMAIN=domain.com
 SUB_DOMAIN=www
@@ -39,7 +41,7 @@ IP_COUNT=1
 
 通过挂载配置文件方式:
 
-```
+```bash
 docker run -d \
     --restart=always \
     --name=dnspod-ddns \
@@ -49,7 +51,7 @@ docker run -d \
 
 通过传递环境变量的方式:
 
-```
+```bash
 docker run -d \
     --restart=always \
     --name=dnspod-ddns \
