@@ -4,9 +4,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# VSCODE
-.vscode/
-
 # C extensions
 *.so
 
@@ -65,3 +62,7 @@ target/
 
 
 ddnspod.cfg
+
+
+# VSCODE
+.vscode/
