@@ -67,3 +67,4 @@ ddnspod.cfg
 # VSCODE
 .vscode/settings.json
 .vscode/tasks.json
+tasks.json
