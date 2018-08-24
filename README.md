@@ -73,4 +73,4 @@ docker run -d \
 
 尚未测试，应该能适配的环境：
 - [ ] Centos
-- [ ] Ubunto
+- [ ] Ubuntu
